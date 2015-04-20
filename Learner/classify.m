@@ -1,4 +1,7 @@
 function [err, ms] = classify(dataset)
+
+    %==========================================================
+    %% LOAD TESTING DATA & CLASSIFIER
     addpath data
     if exist(strcat('data/', dataset),'dir') == 0
         fprintf('Data set does not exist.\n');
@@ -8,6 +11,8 @@ function [err, ms] = classify(dataset)
     load(strcat(dataset, '_classifier'));
     rmpath data
     
+    %==========================================================
+    %% MAKE PREDICTIONS ON THE DATA & COMPUTE ACCURACY
     addpath stackedae
     tic
     [pred] = stackedAEPredict(classifier.theta, classifier.inputSize, ...
