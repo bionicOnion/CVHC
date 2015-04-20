@@ -11,8 +11,6 @@ function stack = params2stack(params, netconfig)
 %             the configuration of the network
 %
 
-disp(size(params));
-
 % Map the params (a vector into a stack of weights)
 depth = numel(netconfig.layersizes);
 stack = cell(depth,1);
