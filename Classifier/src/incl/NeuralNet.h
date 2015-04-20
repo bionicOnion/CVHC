@@ -23,6 +23,8 @@ private:
   int numLayers;
   int numClasses;
 
+  bool netLoaded = false;
+
   char lookupTable[63] =
   {
     '?', '0', '1', '2', '3', '4', '5', '6', '7', '8',
@@ -38,7 +40,7 @@ private:
   bool buildNetwork(mxArray*, mxArray*);
   char lookup(int);
   cv::Mat sigmoid(cv::Mat);
-  bool preprocess(cv::Mat&);
+  bool reshape(cv::Mat&);
 };
 
 #endif

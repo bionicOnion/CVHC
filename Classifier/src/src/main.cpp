@@ -14,20 +14,22 @@ int main(int argc, char** argv)
   NeuralNet nn;
   CharacterExtractor ce;
 
+  // Load the neural network from the specified classifier file
   if (!nn.loadNN(argv[1]))
   {
     fprintf(stderr, "There were errors while loading the neural network.\n");
     return 0;
   }
 
-  cv::Mat srcImage;
-  srcImage = cv::imread(argv[2], CV_LOAD_IMAGE_COLOR);
+  // Load the specified image
+  cv::Mat srcImage = cv::imread(argv[2], CV_LOAD_IMAGE_COLOR);
   if (!srcImage.data)
   {
     printf("The specified image could not be found.\n");
     return 0;
   }
 
+  // Preprocess the image
   int errCode;
   cv::Mat destImage, threshImage, croppedImage;
   std::vector<cv::Rect> boundingBoxes, charBoundingBoxes;
@@ -46,6 +48,8 @@ int main(int argc, char** argv)
     printf("Correcting bounding boxes failed with code %i\n", errCode);
     return errCode;
   }
+
+  // Classify every character found within the image
   std::vector<cv::Rect>::iterator iter;
   for (iter = charBoundingBoxes.begin(); iter != charBoundingBoxes.end(); ++iter)
   {
