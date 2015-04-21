@@ -54,10 +54,14 @@ int main(int argc, char** argv)
       return errCode;
     }
 
+    cv::imwrite("intermediary/preprocessed.jpg", destImage);
+    cv::imwrite("intermediary/thresholded.jpg", threshImage);
+
     cv::Mat outImage = srcImage;
 
     // Classify every character found within the image
     std::vector<cv::Rect>::iterator iter;
+    int j = 0;
     for (iter = charBoundingBoxes.begin(); iter != charBoundingBoxes.end(); ++iter)
     {
       if ((errCode = ce.cropImage(threshImage, croppedImage, *iter)) != 0)
@@ -65,6 +69,9 @@ int main(int argc, char** argv)
         printf("Cropping failed with code %i\n", errCode);
         return errCode;
       }
+
+      cv::imwrite("intermediary/cropped_" + std::to_string(j) + ".jpg", croppedImage);
+      ++j;
 
       char label = nn.classify(croppedImage);
       cv::putText(outImage, std::string(&label), (*iter).br(), CV_FONT_HERSHEY_SIMPLEX, 1, CV_RGB(0,255,0));
