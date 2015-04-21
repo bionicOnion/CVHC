@@ -17,8 +17,7 @@ mxArray* NeuralNet::extractElement(mxArray* structure, std::string fieldname)
   for (i = 0; i < numel; ++i)
   {
     mxArray* extracted = mxGetField(structure, i, fieldname.c_str());
-    if (extracted != NULL)
-      return extracted;
+    if (extracted != NULL) return extracted;
   }
   return NULL;
 }
@@ -61,8 +60,8 @@ bool NeuralNet::buildNetwork(mxArray* field_theta, mxArray* field_netconfig)
    * Extract the weights for all autoencoder layers
    */
   int prevLayerSize = inputSize, layerSize = 0;
-  int i, j, k, wLength, bLength;
   int index = hiddenSize*numClasses;
+  int i, j, k, wLength, bLength;
   cv::Mat weight, bias;
   for (i = 0; i < numLayers; ++i)
   {
@@ -213,8 +212,7 @@ char NeuralNet::classify(cv::Mat image)
   /*
    * Apply the autoencoder layers
    */
-  cv::Mat pred = image;
-  cv::Mat w, b;
+  cv::Mat pred = image, w, b;
   int i;
   for (i = 0; i < numLayers; ++i)
   {
@@ -261,6 +259,15 @@ bool NeuralNet::reshape(cv::Mat& image)
 
 /*
  * Applies the sigmoid function to a matrix
+ *
+ * sigmoid(x) = 1 / (1 + e^-x)
+ * sigmoid'(x) = (sigmoid(x))(1 - sigmoid(x))
+ *
+ * Paramters:
+ *   x -- a cv::Mat to which the sigmoid function should be applied
+ *
+ * Return Value:
+ *   The results of the sigmoid function as applied to x in a different cv::Mat
  */
 cv::Mat NeuralNet::sigmoid(cv::Mat x)
 {
@@ -270,9 +277,18 @@ cv::Mat NeuralNet::sigmoid(cv::Mat x)
 
 /*
  * Converts the prediction of the neural network into ASCII characters
+ * 
+ * The order of the values in the lookup table is (0-9), (A-Z), (a-z)
+ *
+ * Paramters:
+ *   prediction -- an int between 0 and 62 correspsonding to the 62 possible
+ *     character classifications and '?' for unrecognized or otherwise
+ *     invalid inputs
+ *
+ * Return Value:
+ *   The character which corresponds to the given prediction code
  */
 char NeuralNet::lookup(int prediction)
 {
-  if (prediction < 0 || prediction > 62) return lookupTable[0];
-  else return lookupTable[prediction];
+  return (prediction < 0 || prediction > 62)  ? lookupTable[0] :  lookupTable[prediction];
 }

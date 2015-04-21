@@ -17,13 +17,9 @@ public:
   bool loadNN(std::string);
   char classify(cv::Mat);
 private:
-  std::vector<cv::Mat> stackW;
-  std::vector<cv::Mat> stackB;
-  cv::Mat  softmaxTheta;
-  int inputSize;
-  int hiddenSize;
-  int numLayers;
-  int numClasses;
+  std::vector<cv::Mat> stackW, stackB;
+  cv::Mat softmaxTheta;
+  int inputSize, hiddenSize, numLayers, numClasses;
 
   bool netLoaded = false;
 

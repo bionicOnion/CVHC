@@ -1,7 +1,5 @@
 #include "NeuralNet.h"
 #include "CharacterExtractor.h"
-#include "opencv2/highgui/highgui.hpp"
-#include <stdio.h>
 
 int main(int argc, char** argv)
 {
@@ -14,7 +12,9 @@ int main(int argc, char** argv)
   NeuralNet nn;
   CharacterExtractor ce;
 
-  // Load the neural network from the specified classifier file
+  /*
+   * Load the neural network from the specified classifier file
+   */
   if (!nn.loadNN(argv[1]))
   {
     fprintf(stderr, "There were errors while loading the neural network.\n");
@@ -26,7 +26,9 @@ int main(int argc, char** argv)
   {
     printf("Beginning classification on: %s\n", argv[i]);
 
-    // Load the specified image
+    /*
+     * Load the specified image
+     */
     cv::Mat srcImage = cv::imread(argv[i], CV_LOAD_IMAGE_COLOR);
     if (!srcImage.data)
     {
@@ -34,7 +36,9 @@ int main(int argc, char** argv)
       return 0;
     }
 
-    // Preprocess the image
+    /*
+     * Preprocess the image
+     */
     int errCode;
     cv::Mat destImage, threshImage, croppedImage;
     std::vector<cv::Rect> boundingBoxes, charBoundingBoxes;
@@ -57,10 +61,11 @@ int main(int argc, char** argv)
     cv::imwrite("intermediary/preprocessed.jpg", destImage);
     cv::imwrite("intermediary/thresholded.jpg", threshImage);
 
-    cv::Mat outImage = srcImage.clone();
-    cv::Mat boundImage = srcImage.clone();
+    cv::Mat outImage = srcImage.clone(), boundImage = srcImage.clone();
 
-    // Classify every character found within the image
+    /*
+     * Classify every character found within the image
+     */
     std::vector<cv::Rect>::iterator iter;
     int j = 0;
     for (iter = charBoundingBoxes.begin(); iter != charBoundingBoxes.end(); ++iter)
@@ -78,6 +83,10 @@ int main(int argc, char** argv)
       cv::putText(outImage, std::string(&label), iter->br(), CV_FONT_HERSHEY_SIMPLEX, 1.25, CV_RGB(255,0,0), 2);
       cv::rectangle(boundImage, iter->tl(), iter->br(), CV_RGB(0,0,255));
     }
+
+    /*
+     * Save the results
+     */
     std::string filename(argv[i]);
     int lastindex = filename.find_last_of("."); 
     filename = filename.substr(0, lastindex); 
