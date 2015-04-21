@@ -21,8 +21,6 @@ int main(int argc, char** argv)
     return 0;
   }
 
-  cv::Mat outImage;
-
   int i;
   for (i = 2; i < argc; ++i)
   {
@@ -56,7 +54,7 @@ int main(int argc, char** argv)
       return errCode;
     }
 
-    outImage = srcImage;
+    cv::Mat outImage = srcImage;
 
     // Classify every character found within the image
     std::vector<cv::Rect>::iterator iter;
@@ -71,7 +69,11 @@ int main(int argc, char** argv)
       char label = nn.classify(croppedImage);
       cv::putText(outImage, std::string(&label), (*iter).br(), CV_FONT_HERSHEY_SIMPLEX, 1, CV_RGB(0,255,0));
     }
+    std::string filename(argv[i]);
+    int lastindex = filename.find_last_of("."); 
+    filename = filename.substr(0, lastindex); 
+    filename += "_output.jpg";
+    cv::imwrite(filename, outImage);
   }
-  cv::imwrite("output.jpg", outImage);
   return 0;
 }
