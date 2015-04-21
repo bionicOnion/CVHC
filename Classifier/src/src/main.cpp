@@ -21,10 +21,12 @@ int main(int argc, char** argv)
     return 0;
   }
 
+  cv::Mat outImage;
+
   int i;
   for (i = 2; i < argc; ++i)
   {
-    printf("\nBeginning classification on: %s\n", argv[i]);
+    printf("Beginning classification on: %s\n", argv[i]);
 
     // Load the specified image
     cv::Mat srcImage = cv::imread(argv[i], CV_LOAD_IMAGE_COLOR);
@@ -54,6 +56,8 @@ int main(int argc, char** argv)
       return errCode;
     }
 
+    outImage = srcImage;
+
     // Classify every character found within the image
     std::vector<cv::Rect>::iterator iter;
     for (iter = charBoundingBoxes.begin(); iter != charBoundingBoxes.end(); ++iter)
@@ -65,22 +69,9 @@ int main(int argc, char** argv)
       }
 
       char label = nn.classify(croppedImage);
-      printf("Prediction: %c\n", label);
+      cv::putText(outImage, std::string(&label), (*iter).br(), CV_FONT_HERSHEY_SIMPLEX, 1, CV_RGB(0,255,0));
     }
   }
-
-  printf("\nBeginning NN test...\n\n");
-
-  for (i = 2; i < argc; ++i)
-  {
-    printf("Test on image %s\n", argv[i]);
-    cv::Mat image = cv::imread(argv[i], CV_LOAD_IMAGE_GRAYSCALE);
-    if (!image.data)
-    {
-      printf("The specified image could not be found.\n");
-      return 0;
-    }
-    printf("Prediction: %c\n", nn.classify(image));
-  }
+  cv::imwrite("output.jpg", outImage);
   return 0;
 }
