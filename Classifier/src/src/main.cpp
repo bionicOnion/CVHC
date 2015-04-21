@@ -57,7 +57,8 @@ int main(int argc, char** argv)
     cv::imwrite("intermediary/preprocessed.jpg", destImage);
     cv::imwrite("intermediary/thresholded.jpg", threshImage);
 
-    cv::Mat outImage = srcImage;
+    cv::Mat outImage = srcImage.clone();
+    cv::Mat boundImage = srcImage.clone();
 
     // Classify every character found within the image
     std::vector<cv::Rect>::iterator iter;
@@ -74,13 +75,15 @@ int main(int argc, char** argv)
       ++j;
 
       char label = nn.classify(croppedImage);
-      cv::putText(outImage, std::string(&label), (*iter).br(), CV_FONT_HERSHEY_SIMPLEX, 1, CV_RGB(0,255,0));
+      cv::putText(outImage, std::string(&label), iter->br(), CV_FONT_HERSHEY_SIMPLEX, 1.25, CV_RGB(255,0,0), 2);
+      cv::rectangle(boundImage, iter->tl(), iter->br(), CV_RGB(0,0,255));
     }
     std::string filename(argv[i]);
     int lastindex = filename.find_last_of("."); 
     filename = filename.substr(0, lastindex); 
     filename += "_output.jpg";
     cv::imwrite(filename, outImage);
+    cv::imwrite("intermediary/boundingBoxes.jpg", boundImage);
   }
   return 0;
 }
