@@ -5,9 +5,12 @@
 #include <stdio.h>
 #include <string>
 
+#include <math.h>
+
 #include "mat.h"
 #include "opencv2/core/core.hpp"
 #include "opencv2/core/mat.hpp"
+#include "opencv2/highgui/highgui.hpp"
 
 class NeuralNet
 {
@@ -15,8 +18,8 @@ public:
   bool loadNN(std::string);
   char classify(cv::Mat);
 private:
-  std::vector<cv::Mat*> stackW;
-  std::vector<cv::Mat*> stackB;
+  std::vector<cv::Mat> stackW;
+  std::vector<cv::Mat> stackB;
   cv::Mat  softmaxTheta;
   int inputSize;
   int hiddenSize;

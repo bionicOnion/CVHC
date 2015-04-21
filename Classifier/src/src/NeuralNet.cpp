@@ -53,15 +53,17 @@ bool NeuralNet::buildNetwork(mxArray* field_theta, mxArray* field_netconfig)
    * Extract the softmax weights
    */
   double smax[hiddenSize*numClasses];
-  std::memcpy(smax, theta, hiddenSize*numClasses);
-  softmaxTheta = cv::Mat(numClasses, hiddenSize, CV_64F, smax);
+  std::memcpy(smax, theta, hiddenSize*numClasses*sizeof(double));
+  softmaxTheta = cv::Mat(hiddenSize, numClasses, CV_64F, smax);
+  softmaxTheta = softmaxTheta.t();
 
   /*
    * Extract the weights for all autoencoder layers
    */
   int prevLayerSize = inputSize, layerSize = 0;
-  int i, wLength, bLength;
+  int i, j, k, wLength, bLength;
   int index = hiddenSize*numClasses;
+  cv::Mat weight, bias;
   for (i = 0; i < numLayers; ++i)
   {
     mxArray* field_layerSize = mxGetCell(depth, i);
@@ -72,17 +74,43 @@ bool NeuralNet::buildNetwork(mxArray* field_theta, mxArray* field_netconfig)
 
     double w[wLength];
     double b[bLength];
-    std::memcpy(w, theta + index, wLength);
-    cv::Mat* weights = new cv::Mat(layerSize, prevLayerSize, CV_64F, w);
-    stackW.push_back(weights);
+    std::memcpy(w, theta + index, wLength*sizeof(double));
+    weight = cv::Mat(prevLayerSize, layerSize, CV_64F, w);
+    stackW.push_back(weight.t());
+
+    for (j = 0; j < stackW[i].rows; ++j)
+    {
+      for (k = 0; k < stackW[i].cols; ++k)
+      {
+        if (isnan(stackW[i].at<double>(j,k)))
+        {
+          printf("NaN found in weight matrix on iteration %i at index (%i, %i)\n", i, j, k);
+          return false;
+        }
+      }
+    }
 
     index += wLength;
-    std::memcpy(b, theta + index, bLength);
+    std::memcpy(b, theta + index, bLength*sizeof(double));
     index += bLength;
-    stackB.push_back(new cv::Mat(layerSize, 1, CV_64F, b));
+    bias = cv::Mat(1, bLength, CV_64F, b);
+    stackB.push_back(bias.t());
+
+    for (j = 0; j < stackB[i].rows; ++j)
+    {
+      for (k = 0; k < stackB[i].cols; ++k)
+      {
+        if (isnan(stackB[i].at<double>(j,k)))
+        {
+          printf("NaN found in bias matrix on iteration %i at index (%i, %i)\n", i, j, k);
+          return false;
+        }
+      }
+    }
 
     prevLayerSize = layerSize;
   }
+
   return true;
 }
 
@@ -185,26 +213,26 @@ char NeuralNet::classify(cv::Mat image)
   /*
    * Apply the autoencoder layers
    */
-  cv::Mat pred = image, w, b;
+  cv::Mat pred = image;
+  cv::Mat w, b;
   int i;
   for (i = 0; i < numLayers; ++i)
   {
-    w = *(stackW[i]);
-    b = *(stackB[i]);
-    pred = sigmoid(w*pred + b);
+    pred = sigmoid(stackW[i]*pred + stackB[i]);
   }
 
   /*
    * Apply the softmax layer and find the maximally likely value
    */
   pred = softmaxTheta*pred;
-  double maxValue = 0, prediction = 0;
+  double maxValue = 0;
+  int prediction = 0;
   for (i = 0; i < numClasses; ++i)
   {
     if (pred.at<double>(i) > maxValue)
     {
       maxValue = pred.at<double>(i);
-      prediction = i;
+      prediction = i + 1;
     }
   }
 
@@ -226,10 +254,9 @@ char NeuralNet::classify(cv::Mat image)
  */
 bool NeuralNet::reshape(cv::Mat& image)
 {
-  image = image.reshape(0,1).t();
-  int rows = image.rows;
+  image = image.reshape(0,1).t() / 255;
   image.convertTo(image, CV_64F);
-  return (rows == inputSize);
+  return (image.rows == inputSize);
 }
 
 /*
@@ -239,7 +266,6 @@ cv::Mat NeuralNet::sigmoid(cv::Mat x)
 {
   cv::exp(-x, x);
   return 1 / (1 + x);
-  return x;
 }
 
 /*
