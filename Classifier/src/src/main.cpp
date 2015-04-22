@@ -42,7 +42,7 @@ int main(int argc, char** argv)
     int errCode;
     cv::Mat destImage, threshImage, croppedImage;
     std::vector<cv::Rect> boundingBoxes, charBoundingBoxes;
-    if ((errCode = ce.preprocessImage(srcImage, destImage, threshImage, false)) != 0)
+    if ((errCode = ce.preprocessImage(srcImage, destImage, threshImage, true)) != 0)
     {
       printf("Preprocessing failed with code %i\n", errCode);
       return errCode;
