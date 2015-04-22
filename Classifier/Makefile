@@ -15,7 +15,6 @@ ODIR = ./obj
 # LIBRARIES (DEFAULT: none)
 LIBS = `pkg-config --libs opencv` $(MATLAB_ROOT)/libmat.dylib $(MATLAB_ROOT)/libmx.dylib
 
-
 CFLAGS = -I $(IDIR) -Wl,-rpath,$(MATLAB_ROOT)
 ifeq ($(SRCTYPE),.c)
 CC = gcc
