@@ -1,4 +1,11 @@
 function organize()
+%==========================================================
+%% ORGANIZE
+% This function, when run in a directory containing NIST's SD-19
+% dataset, will open and read all of the images into one of two
+% large matrices: a 1024xn training set and a 1024xm test set
+% (where m and n are random values based on the probability of a
+% given writer being assigned to one set or the other)
 
 topLevel = dir;
 
