@@ -9,10 +9,11 @@ using std::endl;
 //specify some parameters that will be used for every processed image
 string rootPath;
 Size blur_kernel = Size(4, 4);
-int erode_kernel_size = 2; //article says 4
+int erode_kernel_size = 3; //article says 4
 double area;
 Size size(32, 32);
 int pad = 4;
+int thresholdVal = 120;
 int square_dimension, x, y, max_x, max_y, processed_count;
 Size image_dim;
 
@@ -37,7 +38,7 @@ int CharacterExtractor::preprocessImage(Mat srcImg, Mat& dstImg, Mat& threshImg,
   //Threshold
   //convert to b / w image, and invert: ie: (black, white) = (0, 1)
   Mat thresholdImg;
-  threshold(blurImg, thresholdImg, 200, 255, 1); //1 for inverted binary threshold type
+  threshold(blurImg, thresholdImg, thresholdVal, 255, 1); //1 for inverted binary threshold type
 
   //Erosion:
   Mat erodedImg;
@@ -131,41 +132,49 @@ bool CharacterExtractor::rectContainRect(Rect& container, Rect& rect){
 */
 int CharacterExtractor::cropImage(Mat srcImg, Mat& dstImg, Rect& charBox){
 
-  square_dimension = 2 * pad + max(charBox.width, charBox.height);
-  x = charBox.x - pad;
-  y = charBox.y - pad;
-  image_dim = srcImg.size();
-  max_x = image_dim.width;
-  max_y = image_dim.height;
+  Mat croppedIntermediate = srcImg(charBox).clone();   //very important to use clone here or it will keep history and when adding border it will show the neighboring chars again
+  int top, bottom, left, right;
+  int borderType;
+  Scalar value;
+  
+  int pad = 8;
+  square_dimension = pad + max(charBox.width, charBox.height);
+  if ((x - pad <= 0) || (x + square_dimension + pad >= max_x) || (y - pad <= 0) || (y + square_dimension + pad >= max_y)){
+    square_dimension = max(charBox.width, charBox.height);
+  }
 
-  //check to make sure the padding doesn't try to select pixels outside the original dimension
-  try{
-    if ((x - pad <= 0) || (x + square_dimension + pad >= max_x) 
-       || (y - pad <= 0) || (y + square_dimension + pad >= max_y)){
-      Rect crop_region = charBox;
-      Mat cropped_image = srcImg(crop_region); //crop the image using the largest bounding rectangle
-      Mat resized_cropped_image;
-      resize(cropped_image, resized_cropped_image, size);
-      dstImg = resized_cropped_image;
-      return 0;
+  if (charBox.height > charBox.width){
+    top = 0;
+    bottom = 0;
+    left = (int) (square_dimension - charBox.width) / 2;
+    right = (int) (square_dimension - charBox.width) / 2;
+    if (1.0*(1.0*left + 1.0*right) < 1.0*(1.0*square_dimension - 1.0*charBox.width)){
+      left = left + 1;
     }
   }
-  catch (int e){
-    cout << "An exception occurred:" << e << endl;
-    return -1;
+  else if(charBox.height < charBox.width){
+    left = 0;
+    right = 0;
+    top = (int)(square_dimension - charBox.height) / 2;
+    bottom = (int)(square_dimension - charBox.height) / 2;
+    if (1.0*(1.0*top + 1.0*bottom) < 1.0*(1.0*square_dimension - 1.0*charBox.height)){
+      top = bottom + 1;
+    }
+  }else{
+    top = 0; 
+    bottom = 0; 
+    left = 0; 
+    right = 0;
   }
-  try
-  {
-    Rect crop_region = Rect(x, y, square_dimension, square_dimension);
-    Mat cropped_image = srcImg(crop_region); //crop the image using the largest bounding rectangle
-    Mat resized_cropped_image;
-    resize(cropped_image, resized_cropped_image, size);
-    dstImg = resized_cropped_image;
-    return 0;
-  }
-  catch (int e){
-    cout << "An exception occurred:" << e << endl;
-    return -1;
-  }
+  top = top + pad / 2;
+  bottom = bottom + pad / 2;
+  left = left + pad / 2;
+  right = right + pad / 2;
+
+  Mat padded_intermediate;
+  Mat resized_cropped_image;
+  copyMakeBorder(croppedIntermediate, padded_intermediate, top, bottom, left, right, BORDER_CONSTANT, 0);
+  resize(padded_intermediate, resized_cropped_image, size); 
+  dstImg = resized_cropped_image;
   return 0;
 }
